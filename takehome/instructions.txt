@@ -1,0 +1,34 @@
+source("http://www.uvm.edu/~rsingle/Rdata/scripts_stat295F14.R")
+library(haplo.stats)
+ hgdp <- otherdata("HGDP_AKT1.txt")
+ pops.use <- c("Bantu","Biaka_Pygmies","Yoruba","Palestinian","Druze","Bedouin","Sardinian","French_Basque","French","Colombian","Karitiana")
+ hgdp <- hgdp[hgdp$Population %in% pops.use,] #use just a subset of populations
+ hgdp$Geographic.area <- factor(hgdp$Geographic.area)
+ hgdp$Population      <- factor(hgdp$Population)
+ head(hgdp)
+#attach(hgdp) #uncomment if you are going to attach the dataset
+              #do not attach() before modifying the hgdp object
+
+Answer questions 1 - 5 below using only the Biaka_Pygmies population. Question 6 asks you to compute these and other statistics for each of the populations and combine the information in a data.frame. The questions involve the AKT1.C6024T and AKT1.G2347T SNPs (SNP2 & SNP3).
+
+1. Create a cross-tab of genotypes at the two loci - How many haplotypes are pre-determined and how many need to be sorted out via the E-M algorithm?
+2. Compute allele frequencies for each locus separately - extract the frequencies in R as p.A, p.a, p.B, & p.b
+3. Compute haplotype frequencies for AKT1.C6024T-AKT1.G2347T haplotypes - extract the haplotype frequencies in R in a similar fashion.
+4. Use your extracted objects to compute the D, D', and r^2 measures of LD.
+5. Verify your results from part 4 using the LD() function.
+6. Create an R data.frame that has the following columns
+   region     Geographic.area for the population
+   population Population name
+   snp2.MAF   minor allele frequency at AKT1.C6024T
+   snp3.MAF   minor allele frequency at AKT1.G2347T
+   HWE.pval2  HWE p-value at AKT1.C6024T
+   HWE.pval3  HWE p-value at AKT1.G2347T
+   D'         the normalized disequilibrium coefficient
+   r^2        the squared correlation measure of LD
+
+Your answers should be in a text file that can be copied and pasted into R. Any non-R code or comments should be preceded by a '#' comment character as below for a non-existent question 7.
+
+#
+#7.
+#   You can see that there are only 2 South American populations ...
+    table(hgdp$Population,hgdp$Geographic.area)
