@@ -67,4 +67,6 @@ for (snp in snps){
 #To the manhattans!
 barplot(-log10(pvals))
 
+#Here is a new comment. 
+
 
