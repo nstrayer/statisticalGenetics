@@ -58,14 +58,21 @@ for (snp in snps){
   #if there is something wierd about the pval let's exclude it. 
   if (pval < 1.205409e-10 || pval == "NaN"){ 
     anomalies = c(anomalies, snp)
-    print(snp)
+    #print(snp)
   } else { 
+    if ( (-log10(pval) > 2) & !(snp %in% anomalies) ){
+      print(paste(snp, toString(pval)))
+    }
     #if we didn't exclude it, put it into a nice list for plotting
     pvals = c(pvals, pval)
   }
 }
 #To the manhattans!
 barplot(-log10(pvals))
+text(150,3, "Here")
+text(200,2.5, "Here2")
+text(230,6.3, "Here3")
+dev.off()
 
 #Here is a new comment. 
 
