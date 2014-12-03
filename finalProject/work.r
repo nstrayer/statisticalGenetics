@@ -24,17 +24,11 @@
 #--------------------------------------------------------------------------------------
 #READ IN THE FULL FAMUSS DATASET
 
+library(vioplot)
+
 source("http://www.uvm.edu/~rsingle/Rdata/scripts_stat295F14.R")
 fms <- otherdata("FMS_data.tsv", sep="\t")
 attach(fms)
-
-#TEST CODE (to make sure the data is read in correctly):
-summary(resistin_c30t)
-# CC   CT NA's 
-#712   21  664 
-table(resistin_c30t) #NOTE: NA's not listed
-# CC  CT 
-#712  21 
 #--------------------------------------------------------------------------------------
 
 #We assign out cutoff at the 90th percentile
@@ -49,31 +43,51 @@ fms2 = fms[,colnames(fms) != "b2b"]
 #get the names of the snps
 snps = names(fms2)[5:226]
 
+percents_NA = NULL
+for (snp in snps){
+  percents_NA = c(percents_NA, ( summary(fms[[snp]])["NA's"] / length(fms[[snp]])) )
+}
+
+#hist(percent_NA, breaks = 20)
+vioplot(percents_NA)
+
+#So we will throw away snps with NA percentange of higher than 70. 
+
 #Initialize some lists
 pvals = NULL
-anomalies = NULL
+pval = NULL
+numOfSnps = 0
 for (snp in snps){
-  pval = chisq.test(table(NDRM.CH > 100, fms2[[snp]]))$p.value
   
-  #if there is something wierd about the pval let's exclude it. 
-  if (pval < 1.205409e-10 || pval == "NaN"){ 
-    anomalies = c(anomalies, snp)
-    #print(snp)
-  } else { 
-    if ( (-log10(pval) > 2) & !(snp %in% anomalies) ){
-      print(paste(snp, toString(pval)))
-    }
-    #if we didn't exclude it, put it into a nice list for plotting
+  percent_NA = summary(fms2[[snp]])["NA's"] / length(fms2[[snp]])
+  tabledVals = table(NDRM.CH > 100, fms2[[snp]])
+  if ((percent_NA < .7) && !(0 %in% tabledVals)){
+    pval = chisq.test(tabledVals)$p.value
     pvals = c(pvals, pval)
+    numOfSnps = numOfSnps + 1
+    if (-log10(pval) > 2){
+      print(snp)
+    }
+  } else {
   }
-}
-#To the manhattans!
+  }
+bonferPVal = .05/numOfSnps
+bonferPVal
 barplot(-log10(pvals))
-text(150,3, "Here")
-text(200,2.5, "Here2")
-text(230,6.3, "Here3")
+
+
+#To the manhattans!
+pdf("labeled_manhattan.pdf")
+barplot(-log10(pvals))
+text(113,2.7,  "nos3_rs1799983", pos = 4, cex = 0.8)
+text(167,2.2,  "resistin_c980g", pos = 4, cex = 0.8)
+text(195,6.36, "visfatin_6947766", pos = 4, cex = 0.8)
 dev.off()
 
 #Here is a new comment. 
 
+#Find the pvalue for significance with conservative bonferoni correction. 
+bonferPVal = .05/length(snps)
+
+sampleSnp = nos3_rs1799983
 
