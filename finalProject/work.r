@@ -126,20 +126,20 @@ write.csv(HWE_Out, file = "HWE_Data.csv")
 #-----------------------------------------------------------------------------------------------------
 # Dominant arm association:
 #----------------------------------------------------------------------------------------------------
-
+DRM_cutoff = quantile(DRM.CH, c(.90), na.rm = TRUE) 
 DRM_pvals    = NULL
 DRM_usedSnps = NULL
 for (snp in snps){
   percent_NA = summary(fms2[[snp]])["NA's"] / length(fms2[[snp]])
-  tabledVals = table(DRM.CH > 100, fms2[[snp]])
+  tabledVals = table(DRM.CH > DRM_cutoff, fms2[[snp]])
   if ((percent_NA < .7) && !(0 %in% tabledVals)){
     pval = chisq.test(tabledVals)$p.value
     DRM_pvals = c(DRM_pvals, pval)
     DRM_usedSnps = c(DRM_usedSnps, snp)
   }
 }
-barplot(-log10(NDRM_pvals))
+barplot(-log10(DRM_pvals))
 
 #make a csv for exporting
 DRM_Out = data.frame(DRM_usedSnps, -log10(DRM_pvals))
-write.csv(DRM_Out, file = "DRM_Data.csv")
+write.csv(DRM_Out, file = "d3Viz/DRM_Data.csv")
