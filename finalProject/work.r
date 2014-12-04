@@ -1,26 +1,11 @@
 #--------------------------------------------------------------------------------------
-#VARIABLES
+# The following is R code written for exploratory analysis of the FAMUS dataset. 
+# 
+# Written by Nick Strayer and Peter Euclide for final project for Stats 295 Fall 2014 with
+# Professor Richard Single at the University of Vermont.
 #
-#Gender: this is sex, NOT GENDER
-#Age
-#Race
-#NDRM.CH: % change in muscle mass before & after exercise training (Non-Dominant Arm)
-#DRM.CH:  % change in muscle mass before & after exercise training (Dominant Arm)
-#Pre.weight
-#Pre.height
-#pre.BMI
-#SBP:     Systolic Blood Pressure
-#Dom.Arm: Dominant Arm
-#Post.weight
-#Post.Height
-#Calc.post.BMI
-#
-#SNPs in lots of different genes
-#--------------------------------------------------------------------------------------
-# Your assignment is to do an exploratory analysis of genetic and/or other factors  
-# that are predictive of % change in muscle mass before & after exercise training 
-# in the non-dominant arm (NDRM.CH). 
-
+# Code outputs csv files with results of each association test for use with an online
+# manhattan plot generator. Hosted at www.uvm.edu/~nstrayer/manhattanPlot
 #--------------------------------------------------------------------------------------
 #READ IN THE FULL FAMUSS DATASET
 setwd("/Users/Nick/fall14/statGen/finalProject")
@@ -55,6 +40,10 @@ vioplot(percents_NA)
 
 #So we will throw away snps with NA percentange of higher than 70. 
 
+
+#-----------------------------------------------------------------------------------------------------
+# Non-Dominant Arm association:
+#----------------------------------------------------------------------------------------------------
 #Initialize some lists
 NDRM_pvals    = NULL
 NDRM_usedSnps = NULL
@@ -85,9 +74,48 @@ dev.off()
 #Find the pvalue for significance with conservative bonferoni correction. 
 bonferPVal = .05/length(snps)
 
+
 #-----------------------------------------------------------------------------------------------------
-# Nick's Part:
+# Dominant arm association:
 #----------------------------------------------------------------------------------------------------
+DRM_cutoff = quantile(DRM.CH, c(.90), na.rm = TRUE) 
+DRM_pvals    = NULL
+DRM_usedSnps = NULL
+for (snp in snps){
+  percent_NA = summary(fms2[[snp]])["NA's"] / length(fms2[[snp]])
+  tabledVals = table(DRM.CH > DRM_cutoff, fms2[[snp]])
+  if ((percent_NA < .7) && !(0 %in% tabledVals)){
+    pval = chisq.test(tabledVals)$p.value
+    DRM_pvals = c(DRM_pvals, pval)
+    DRM_usedSnps = c(DRM_usedSnps, snp)
+  }
+}
+barplot(-log10(DRM_pvals))
+
+#make a csv for exporting
+DRM_Out = data.frame(DRM_usedSnps, -log10(DRM_pvals))
+write.csv(DRM_Out, file = "d3Viz/DRM_Data.csv")
+
+#-----------------------------------------------------------------------------------------------------
+# Blood Pressure association:
+#----------------------------------------------------------------------------------------------------
+SBP_cutoff = quantile(SBP, c(.90), na.rm = TRUE) 
+SBP_pvals    = NULL
+SBP_usedSnps = NULL
+for (snp in snps){
+  percent_NA = summary(fms2[[snp]])["NA's"] / length(fms2[[snp]])
+  tabledVals = table(SBP > SBP_cutoff, fms2[[snp]])
+  if ((percent_NA < .7) && !(0 %in% tabledVals)){
+    pval = chisq.test(tabledVals)$p.value
+    SBP_pvals = c(SBP_pvals, pval)
+    SBP_usedSnps = c(SBP_usedSnps, snp)
+  }
+}
+barplot(-log10(SBP_pvals))
+
+#make a csv for exporting
+SBP_Out = data.frame(SBP_usedSnps, -log10(SBP_pvals))
+write.csv(SBP_Out, file = "d3Viz/SBP_Data.csv")
 
 #-----------------------------------------------------------------------------------------------------
 # Hardy Weinberg Manhattan Plot:
@@ -124,22 +152,18 @@ write.csv(HWE_Out, file = "HWE_Data.csv")
 
 
 #-----------------------------------------------------------------------------------------------------
-# Dominant arm association:
+# OR for NDM most significant SNP:
 #----------------------------------------------------------------------------------------------------
-DRM_cutoff = quantile(DRM.CH, c(.90), na.rm = TRUE) 
-DRM_pvals    = NULL
-DRM_usedSnps = NULL
-for (snp in snps){
-  percent_NA = summary(fms2[[snp]])["NA's"] / length(fms2[[snp]])
-  tabledVals = table(DRM.CH > DRM_cutoff, fms2[[snp]])
-  if ((percent_NA < .7) && !(0 %in% tabledVals)){
-    pval = chisq.test(tabledVals)$p.value
-    DRM_pvals = c(DRM_pvals, pval)
-    DRM_usedSnps = c(DRM_usedSnps, snp)
-  }
-}
-barplot(-log10(DRM_pvals))
+#run HWE chi-square 
+table(nos3_rs1799983)
+snp1 <- genotype(nos3_rs1799983, sep="")
+summary(snp1)
+HWE.chisq(snp1)
+tabledVals = table(fms2$nos3_rs1799983,NDRM.CH > 100 )
+chisq.test(tabledVals)
 
-#make a csv for exporting
-DRM_Out = data.frame(DRM_usedSnps, -log10(DRM_pvals))
-write.csv(DRM_Out, file = "d3Viz/DRM_Data.csv")
+x <- tabledVals
+or.GG.TT <- (x[1,1]*x[3,2])/(x[1,2]*x[3,1])
+or.GT.TT <- (x[2,1]*x[3,2])/(x[2,2]*x[3,1])
+or.GG.TT  # 3.95 more likely to have muscle bellow 90th percentile if GG
+or.GT.TT  # 1.99 times more likely to have muscle below 90th percentile if GT
